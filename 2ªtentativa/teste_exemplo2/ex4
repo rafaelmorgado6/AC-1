@@ -1,0 +1,60 @@
+#typedef struct
+#{					Align	SIZE	Offset
+#	int acc;			 4 	  4	  0		
+#	unsigned char nm;		 1        1       4
+#	double grade;			 8        8       5(8)
+#	char quest[14]			 1        14      14(16)
+#	int cq;				 4        4       28(32) 
+#} t_kvd;				 8        40				
+
+#Mapa de registos
+#nv: $a0
+#pt: $a1
+#i: $t0
+#j: $t1
+#sum: $f2
+
+	.data
+sum:	.float 0.0
+	.align 3
+pt:	.space 40
+	.text
+	
+func4:
+	l.d $f2,sum		# sum = 0.0
+	li $t0,0		# i = 0
+for:
+	bge $t0,$a0,endfor	# i < nv
+	li $t1,0		# j = 0
+do:
+	addiu $t2,$a1,16	# $t2 = pt->quest[0] endereço
+	addu $t2,$t2,$t1	# $t2 = pt->quest[j] endereço
+	lb $t3,0($t2)		# $t3 = pt->quest[j] conteudo
+	mtc1 $t3,$f4		# CPU -> FPU
+	cvt.d.w $f4,$f4		# (double)pt->quest[j]
+	
+	add.d $f2,$f2,$f4	# sum += (doule)pt->quest[j]
+	addiu $t1,$t1,1		# j++
+while:
+	lb $t4,4($a1)		# $t4 = pt->nm
+	
+	blt $t1,$t4,do		# j < pt->nm
+	
+	l.d $f6,8($a1)		# $f6 = pt->grade
+	div.d $f8,$f2,$f6	# sum/pt->grade
+	cvt.w.d $f8,$f8		# (int)(sum/pt->grade)
+	sw $f8,0($a1)		# pt->acc = (int)(sum/pt->grade)    ofset acc=0
+	
+	addi $t0,$t0,1		# i++
+	addi $a1,$a1,40		# pt++
+	
+	j for
+endfor:
+	lw $t5,32($a1)		# $t5 = pt->cq
+	mtc1 $t5,$f10		# CPU -> FPU
+	cvt.d.w $f10,$f10	# (double)pt->cq
+	l.d $f6,8($a1)		# pt->grade conteudo
+	mul.d $f0,$f6,$f10	# return (pt->grade * (double)pt-cq)
+	
+	jr $ra
+	

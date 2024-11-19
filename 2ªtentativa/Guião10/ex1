@@ -1,0 +1,94 @@
+	.data
+	.eqv print_float,2
+	.eqv read_int,5
+	.eqv read_float,6
+	.eqv print_string,4
+k:	.float 1.0
+str1:	.asciiz "Introduza x e y: \n"
+str2:	.asciiz "\nO resultado é: "
+	.text
+	.globl main
+main:
+	addiu $sp,$sp,-4	# reserva espaço
+	sw $ra,0($sp)		# guarda endereço
+	
+	la $a0,str1
+	li $v0,print_string
+	syscall			# print_string(str1)
+	
+	li $v0,read_float
+	syscall			# read_float(x)
+	mov.s $f12,$f0		# mover X para valor de entrada da função
+	
+	li $v0,read_int
+	syscall			# read_int(y)
+	move $a0,$v0		# mover Y para valor de entrada da função
+	
+	jal xtoy
+	
+	la $a0,str2
+	li $v0,print_string
+	syscall			# print_string(str2)
+	
+	mov.s $f12,$f0		# $f12 -> entrada para o print;  $f0 -> saida função
+	li $v0,print_float
+	syscall			# print_float
+	
+	lw $ra,0($sp)		# repõe valor
+	addiu $sp,$sp,4		# liberta espaço
+	
+	jr $ra
+	
+#######################################################################################
+# recebe X em $f12 e Y em $a0
+xtoy:
+	addiu $sp,$sp,-20
+	sw $ra,0($sp)  #obrigatorio guardar quando rotina chama outra
+	s.s $f20,4($sp) # guardar x porque se chama outra subrotina
+	sw $s0,8($sp) #guardar y porque se chama outra subrotina
+	sw $s1,12($sp) #guardar i porque é chamada uma subrotina entre os incrementos
+	s.s $f22,16($sp) #guardar return porque os seus valores sao alterados durante o chamamento de outra subrotina
+	
+	mov.s $f20,$f12		# $f20 = X
+	move $s0,$a0		# $s0 = Y
+	
+	li $s1,0	# i = 0
+	l.s $f22,k	# result = 1.0
+for:
+	move $a0,$s0	# por Y no parametro de entrada para abs
+	jal abs
+	
+	bge $s1,$v0,endfor	# i < abs(y)
+if:
+	ble $s0,0,else	# y > 0
+	
+	mul.s $f22,$f22,$f20	# result *= X
+	j endif
+else:
+	div.s $f22,$f22,$f20	# result /= X
+endif:	
+	addi $s1,$s1,1	# i++
+	j for
+endfor:
+	mov.s $f0,$f22	# return result
+		
+	l.s $f22,16($sp)
+	lw $s1,12($sp)
+	lw $s0,8($sp)
+	l.s $f20,4($sp)
+	lw $ra,0($sp)
+	addiu $sp,$sp,20
+	
+	jr $ra
+	
+##########################################################################
+# Recebe Y em $ao
+abs:
+if1:
+	bge $a0,0,endif1	# val < 0
+	
+	sub $a0,$0,$a0		# val = -val
+endif1:
+	move $a0, $v0		# return val
+	
+	jr $ra

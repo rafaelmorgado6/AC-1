@@ -1,0 +1,45 @@
+# Mapa de registos
+#   -> $t0
+# p -> $t1
+# *p -> $t2
+#  -> $t3
+ 		
+ 		.data
+		.eqv SIZE, 20
+ 		.eqv read_string, 8
+ 		.eqv print_string, 4
+ str:		.space SIZE				# reservar espaço para a string
+ str1: 	.asciiz "Introduza uma string: "
+ 		.text
+ 		.globl main
+ main: 		
+ 		la $a0,str1
+		ori $v0,$0,print_string	
+		syscall					# print_string(str1)
+		
+		la $a0,str
+ 		li $a1, SIZE
+		li $v0,read_string	
+		syscall					# read_string
+		
+		la $t1,str					# p = str
+while:
+		lb $t2,0($t1)				# $t2 = *p
+		
+		beq $t2,'\0',endwhile			# *p != '\0'
+
+		li $t5,'a'					# $t5 = 'a'
+		li $t6,'A'					# $t6 = 'A'
+		sub $t2,$t2,$t5				# *p = *p – 'a'
+		add $t2,$t2,$t6			#  *p = *p - 'a' + 'A'
+		
+		sb $t2,0($t1)
+		
+		addi $t1,$t1,1				# p++
+		j while
+endwhile:
+		la $a0,str
+		ori $v0,$0,print_string	
+		syscall					# print_string(str)		
+		
+		jr $ra

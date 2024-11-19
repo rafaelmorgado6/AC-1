@@ -1,0 +1,70 @@
+# Mapa de registos
+# fl : $s0
+# k : $s1
+# av : $s2
+# i : $s3
+# res: $t0
+
+	.data
+	.eqv SIZE, 15 
+	.eqv print_int10, 1
+	.eqv print_string, 4
+str:	.asciiz "Invalid argc"
+	.text
+	
+func2:
+	addiu $sp,$sp,-20
+	sw $ra,0($sp)
+	sw $s0,4($sp)		#fl
+	sw $s1,8($sp)		#k
+	sw $s2,12($sp)		#av
+	sw $s3,16($sp)		#i
+	
+	move $s0,$a0		# $s0 = f1[0]
+	move $s1,$a1		# $s1 = k
+	move $s2,$a2		# $s2 = av[0]
+	
+	li $t0,-1		# res = -1
+	
+if:
+	blt $s1,2,else		# k >= 2
+	bgt $s1,SIZE,else	# k <= SIZE
+	
+	li $s3,2		# i = 2
+do:
+	addu $a0,$s2,$s3	# $a0(entrada) = &av[i]
+	jal toi
+	
+	sll $t1,$s3,2		# i*4
+	addu $t2,$s0,$t1	# $t2 = &fl[i]
+	sw $v0,0($t2)		# fl[i] = toi(av[i])
+	
+	addi $s3,$s3,1		# i++
+while:
+	blt $s3,$s1,do		# i < k
+	
+	move $a0,$s0		# $a0(entrada) = f1
+	move $a1,$s1		# $a1(entrada) = k
+	jal avz			# avz(f1,k)
+	move $t0,$v0		# res = avz(f1,k)
+	
+	or $a0,$0,$t0		# $a0 = res
+	li $v0,print_int10
+	syscall			# print_int10(res)
+	
+	j endif
+else:
+	la $a0,str
+	li $v0,print_string
+	syscall			# print_string(str)
+endif:
+	move $v0,$t0		# return res
+	
+	lw $ra,0($sp)
+	lw $s0,4($sp)		#fl
+	lw $s1,8($sp)		#k
+	lw $s2,12($sp)		#av
+	lw $s3,16($sp)		#i
+	addiu $sp,$sp,20
+	
+	jr $ra

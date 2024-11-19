@@ -1,0 +1,50 @@
+# Mapa de registos
+# a: $a0
+# t: $f12
+# n: $a1
+# oldg: $f2
+# g: $f4
+# s: $f6
+# k: $t0
+	
+	.data
+oldg:	.float -1.0
+g:	.float 1.0
+s:	.float 0.0
+	.text
+	
+func3:
+	l.s $f2,oldg		# $f2 = -1.0
+	l.s $f4,g		# $f4 = 1.0
+	l.s $f6,s		# $f6 = 0.0
+	
+	li $t0,0		# k = 0
+for:
+	bge $t0,$a1,endfor	# k < n
+	sub $f8,$f4,$f2		# $f8 = g - oldg
+while:
+	c.le.s $f8,$f12		# (g - oldg) > t
+	bc1t endwhile
+
+	mov.s $f2,$f4		# oldg = g
+	sll $t0,$t0,2		# k * 4
+	addu $t1,$a0,$t0	# $t1 = &a[k]
+	l.s $f10,0($t1)		# $f10 = a[k]
+	div.s $f10,$f10,$f12	# a[k] / t
+	addu $f4,$f4,$f10	# g = g + a[k] / t
+	j while
+endwhile:
+	add.s $f6,$f6,$f4	# s = s + g
+	
+	sll $t2,$t0,2		# k * 4
+	addu $t1,$a0,$t2	# a[k]
+	s.s $f4,0($t1)		# g = a[k]
+		
+	addi $t0,$t0,1		# k++
+	j for
+endfor:
+	mtc1 $a1,$f0		# CPU -> FPU
+	cvt.s.w $f0,$f0		# (float)n
+	div.s $f0,$f6,$f0	# return s / (float)n
+	
+	jr $ra

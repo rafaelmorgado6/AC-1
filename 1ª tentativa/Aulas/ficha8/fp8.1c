@@ -1,0 +1,37 @@
+	.data
+str:	.asciiz "101101"
+	.eqv print_int10, 1
+	.text
+	.globl main
+main:	
+	addiu $sp,$sp,-4
+	sw $ra,0($sp)		# Salvaguardar o $ra no stack point - prólogo
+	
+	la $a0,str		# a0 = str
+	jal atoi		# chama atoi
+	
+	or $a0,$0,$v0
+	li $v0,print_int10	# print_int10(atoi)
+	syscall
+	
+	lw $ra,0($sp)		# repoe endereço
+	addiu $sp,$sp,4		# liberta espaço na stack
+	
+	jr $ra
+	
+########################################################################################	
+
+atoi: 	li $v0,0 		# res = 0;
+
+while: 	lb $t0,0($a0) 		# $to = $a0
+ 	blt $t0,'0',endw 	# *s >= '0' 
+ 	bgt $t0,'1',endw 	# *s <= '1'
+ 	
+ 	sub $t1,$t0,'0' 	# digit = *s++ – '0'
+ 	addiu $a0,$a0,1		# s++;
+ 	
+ 	mul $v0,$v0,2 		# res = 2 * res (passa de 10 a 2 por ser binario)
+ 	add $v0,$v0,$t1		# res = 2 * res + digit;
+ 	j while	
+ 			# }
+ endw:	jr $ra 			# termina sub-rotina 

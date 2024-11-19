@@ -1,0 +1,22 @@
+#Tabela:
+#			  Alinhamento	|  Dimensão  | Offset			
+#char a1[10]		|	1	| 1*10=10    |	0		
+#double g		|	8	| 	8    |  0+10=10 -> 12
+#int a2[2]		|	4	|   4*2=8    |  12+8=20
+#char v			|	1	|	1    |  20+8=28
+#float k		|	4	|	4    |  28+1=29 -> 32
+		#TOTAL  |     8(maior)  |  32+4=36
+
+	.data
+	.align 2
+s2:	.asciiz "St1"	#inicio da struct
+	.double 3.141592653589
+	.word 291
+	.word 756
+	.asciiz "X"
+	.float 1.983
+
+	.text
+
+f2:
+	# FALTA ACABAR TIVE PREGUIÇA

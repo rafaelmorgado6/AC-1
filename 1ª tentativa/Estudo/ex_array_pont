@@ -1,0 +1,31 @@
+# Por todos os indices de um array = 0 através de ponteiros
+#
+# Registos
+# $t0 = p
+# $t1 = array[size]
+# $t2 = size
+	.data
+Array:	.space,40
+	.eqv SIZE,10
+	.text
+	.globl main
+main:
+	la $t0,Array		# p = Array[0]
+	li $a0,SIZE		# $a0 = size
+	sll $t1,$a0,2		# $t1 = size * 4
+	addu $t1,$t1,$t0	# $t1 = Array[size]
+for:	
+	bgeu $t0,$t1,endf	# while( p < array[size])
+	sw $0,0($t0)		# *p = 0
+	
+	li $v0,1
+	or $a0,$0,$0
+	syscall	
+	
+	addiu $t0,$t0,4		# p++
+	
+	j for 
+endf:
+	jr $ra
+	
+	

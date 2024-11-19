@@ -1,0 +1,99 @@
+# Mapa de registos
+# lista + SIZE / SIZE - 1: $t0
+# *p : $t1
+# *(p+1) : $t2
+# houve_troca: $t4
+# p: $t5
+# pUltimo: $t6
+# i : $t7
+# j : $t8
+
+		.data
+		.eqv print_int10, 1
+		.eqv print_string, 4
+		.eqv read_int, 5	
+		.eqv FALSE, 0
+		.eqv TRUE, 1
+		.eqv SIZE, 10
+str1:		.asciiz "Introduza  um numero: "
+str2:		.asciiz "Os numeros do array ordenados sao: \n"
+str3:		.asciiz " ; "
+		.align 2
+lista:		.space 40					# SIZE * 4
+		.text
+		.globl main
+main:
+		la $t5,lista 				# $t5 = p = lista
+		li $t0,SIZE 				# $t0 = SIZE
+		sll $t0,$t0,2 				# $t0 = SIZE * 4
+		addu $t0,$t5,$t0			# $t0 = lista + SIZE
+		
+while1:		
+		bge $t5,$t0,do		# p < SIZE + lista
+		
+		la $a0,str1
+		ori $v0,$0,print_string	
+		syscall					# print_string("\nIntroduza um numero: ")
+		
+		li $v0,read_int
+		syscall					# value = read_int ()
+		
+		sw $v0,0($t5)				# value = $t0
+	
+		addiu $t5,$t5,4	 			# p++
+	
+		j while1
+for1:	
+###################################################################
+		li $t7,0					# i = 0
+		la $t5,lista 				# $t5 = p = lista
+		li $t0,SIZE 				# $t0 = SIZE
+		sll $t0,$t0,2 				# $t0 = SIZE * 4
+		sub $t0,$t0,1				# $t0 = SIZE - 1
+		
+		bge $t7,$t0,endf1
+for2:
+		addi $t8,$t7,1				# j = i + 1	
+		bge $t8,SIZE,endf2			# j < SIZE
+if:
+		
+endif:		
+		
+endf2:		
+endf1:				
+		
+		
+		addi $t7,$t7,1				# i++
+		
+
+
+
+
+
+####################################################################
+		la $a0,str2		
+		li $v0,print_string
+		syscall	 				# print_string("Os numeros do array ordenados sao: \n")
+			
+		la $t5,lista					#  p = lista 
+		li $t0,SIZE					# $t0 = SIZE
+		sll $t0,$t0,2 				# $t0 = SIZE * 4
+		addu $t0,$t5,$t0			# $t0 = lista + SIZE 
+while2:
+		bge $t5,$t0,endwhile2		# p < lista+SIZE
+		
+		lw $t1,0($t5)				# $t1 = *p
+		
+		or $a0,$0,$t1
+		li $v0,print_int10
+		syscall					# print_int10( *p )
+		
+		la $a0,str3
+		ori $v0,$0,print_string	
+		syscall					# print_string("; ")
+		
+		addiu $t5,$t5,4				# p++
+		j while2
+		
+endwhile2:
+		jr $ra	

@@ -1,0 +1,96 @@
+# Mapa de registos
+# lista+Size: $t0
+# *p: $t1
+# *(p+1): $t2
+# SIZE-1 : $t3
+# houve_troca: $t4
+# p: $t5
+# pUltimo: $t6
+ 	.data
+ 	.eqv print_int10,1
+ 	.eqv print_string,4
+ 	.eqv read_int,5
+ 	.eqv SIZE,10
+ 	.eqv FALSE,0
+	.eqv TRUE,1
+str1:	.asciiz "Introduza os numeros da string\n"
+str2:	.asciiz "Os numeros do array ordenados sao: \n"
+str3:	.asciiz " ; "
+	.align 2		#Alinha o próximo item num endereço múltiplo de 2^n
+lista:	.space 40 		# SIZE * 4
+ 	.text
+ 	.globl main
+main: 	
+	la $a0,str1 	
+ 	ori $v0,$0,print_string 	
+ 	syscall			# print_string("Introduza os numeros da string\n");
+ 	
+ 	la $t5,lista 		# $t5 = p = lista 
+	li $t0,SIZE		# $t0 = SIZE
+	sll $t0,$t0,2		# $t0 = SIZE * 4
+ 	addu $t0,$t5,$t0	# $t0 = lista + SIZE
+ 	
+loop1:	bge $t5,$t0,do 		# while(p < list + SIZE) { 
+ 	
+ 	li $v0,read_int
+ 	syscall 		# $v0 = read_int();
+ 	
+ 	sw $v0,0($t5) 		# lista[p] = read_int();
+ 	
+ 	addiu $t5,$t5,4	 	# p++
+	j loop1
+ 	
+ 	
+do: 	la $t5,lista 		# $t5 = &lista[0]
+ 	li $t6,SIZE 		#
+ 	subu $t6,$t6,1 		# $t6 = SIZE – 1
+ 	sll $t6,$t6,2	 	# $t6 = (SIZE – 1) * 4
+ 	addu $t6,$t5,$t6	# $t6(pUltimo) = lista + (SIZE – 1)
+ 				
+	li $t4,FALSE		# houve_troca = FALSE
+ 	
+while:	bge $t5,$t6,endw 	# while(p < pUltimo)
+
+if:	lw $t1,0($t5)		# $t1 = *p
+	lw $t2,4($t5)		# $t2 = *(p+1)
+	
+	ble $t1,$t2,endf	# if(*p > *(p+1))
+	
+	sw $t1,4($t5)		# *(p+1) = $t1
+	sw $t2,0($t5)		# *p = $t2
+	
+	li $t4,TRUE		# houve_troca = TRUE
+	
+endf:
+	addiu $t5,$t5,4		# p++
+	j while
+endw:
+	beq $t4,TRUE,do		# } while(houve_troca == TRUE)
+	
+	la $a0,str2		
+	li $v0,print_string
+	syscall	 		# print_string("Os numeros do array ordenados sao: \n)
+	
+	la $t5,lista 		# $t5 = p = lista
+	li $t0,SIZE 		# $t0 = SIZE
+	sll $t0,$t0,2 		# $t0 = SIZE * 4
+	addu $t0,$t5,$t0	# $t0 = lista + SIZE
+	
+loop2:
+	bge $t5,$t0,end		# while(p < lista + SIZE)
+
+	lw $t1,0($t5)		# $t1 = *p
+	
+	or $a0,$0,$t1
+	li $v0,print_int10
+	syscall			# print_int10(*p)
+	
+	la $a0,str3		
+	li $v0,print_string
+	syscall			# print_string(" ; ")
+	
+	addiu $t5,$t5,4		# p++
+	
+	j loop2
+end:	
+	jr $ra 			# termina o programa

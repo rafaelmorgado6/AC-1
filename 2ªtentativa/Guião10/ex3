@@ -1,0 +1,237 @@
+.data
+	.eqv print_double,3
+	.eqv print_string,4
+k:	.float 1.0
+k1:	.double 0.5
+array: .double 1,2,3,4,5,6,7,8,9,10	
+str0: .asciiz "A variância populacional dos elementos do array é: "
+str1: .asciiz "\nO desvio padrão populacional dos elementos do array é: "	
+	.text	
+	.globl main 
+
+main: addiu $sp,$sp,-4
+      sw $ra,0($sp)
+      
+      la $a0,array
+      li $a1,10
+      jal var
+
+      la $a0,str0
+      li $v0,print_string
+      syscall #print("A variância...")
+
+      mov.d $f12,$f0
+      li $v0,print_double
+      syscall	
+      
+      la $a0,array
+      li $a1,10
+      jal stdev
+
+      la $a0,str1
+      li $v0,print_string
+      syscall #print("O desvio...")
+
+       mov.d $f12,$f0
+      li $v0,print_double
+      syscall	
+      
+      lw $ra,0($sp)
+      addiu $sp,$sp,4
+
+      jr $ra #Termina sub-rotina
+
+##############################################
+	
+var:
+	addiu $sp,$sp,-20
+	sw $ra,0($sp)		#guardar para o retorno
+	sw $s0,4($sp)		#guardar array (nao pode ser $f20 porque o conteudo é double mas o endereço é int
+	sw $s1,8($sp)		#guardar nval
+	sw $s2,12($sp)		#guardar i
+	s.s $f20,16($sp)		#guardar soma
+
+	move $s0,$a0		#colocar o array para um registo que nao pode ser alterado ($f20)
+	move $s1,$a1		#colocar nval para um registo que nao pode ser alterado ($s0)
+
+	jal average		#como os parametros de entrada da funçao já estao é so chamar a função
+	cvt.s.d $f2,$f0		#converter de double para float (float) average (array,nval) media=$f2
+	
+	li $s2,0		#i=0
+	mtc1 $0,$f20		#soma=0.0
+
+forvar:
+	bge $s2,$s1,endforvar	#i<nval
+
+	sll $t0,$s2,3		#i*8 porque é double
+	addu $t1,$s0,$t0	#&array[i]
+	l.d $f4,0($t1)		#(double) array[i] temos de fazer l.d e nao l.s pois o array vem em doubles
+	cvt.s.d $f4,$f4		#(float) array[i]
+
+	sub.s $f12,$f4,$f2	#array[i]-media e colocar em $f12 para parametro de entrada da função
+	li $a0,2		#colocar em $a0 para parametro de entrada da funçao
+	jal xtoy	#xtoy((float)array[i]-media,2
+
+	add.s $f20,$f20,$f0	#soma=soma+xtoy	
+	
+	addiu $s2,$s2,1		#i++
+	j forvar
+endforvar:	
+
+	cvt.d.s $f20,$f20	#double(soma)
+	mtc1 $s1,$f6		#mover para a FPU para se poder fazer conversoes
+	cvt.d.w $f6,$f6		#double(nval)
+	div.d $f0,$f20,$f6	#return soma/nval	
+
+	lw $ra,0($sp)		
+	lw $s0,4($sp)		
+	lw $s1,8($sp)		
+	lw $s2,12($sp)		
+	l.s $f20,16($sp)		
+	addiu $sp,$sp,20
+
+	jr $ra
+
+#########################################
+
+stdev:
+	addiu $sp,$sp,-12
+	sw $ra,0($sp)		#guardar o return
+	sw $s0,4($sp)		#guardar array
+	sw $s1,8($sp)		#guardar nval
+	
+	move $s0,$a0		#guardar &array[0]
+	move $s1,$a1		#guardar nval
+
+	jal var			#var(array,nval)
+
+	mov.d $f12,$f0		#colocar em parametro de entrada
+	jal sqrt		#sqrt(var(array,nval))  ; ja esta em $f0 para ser retornado
+	
+	lw $ra,0($sp)		
+	lw $s0,4($sp)		
+	lw $s1,8($sp)		
+	addiu $sp,$sp,12
+
+	jr $ra
+
+#########################################
+
+average:
+	move $t0,$a1		#i=n
+
+	mtc1 $0,$f4		#sum=0.0
+for:
+	ble $t0,0,endfor	#i>0
+
+	addiu $t1,$t0,-1	#i-1
+	sll $t1,$t1,3		#(i-1)*8   (porque x8????????) 
+	addu $t1,$a0,$t1	#&array[i-1]
+	l.d $f4,0($t1)		#$f4=array[i-1]  --- double por isso $f4
+
+	add.d $f0,$f0,$f4	#sum+=array[i-1]	
+
+	addiu $t0,$t0,-1	#i--
+	j for
+endfor:
+
+	mtc1 $a1,$f6		#mover n para o FPU
+	cvt.d.w $f6,$f6		#(double)n
+
+	div.d $f0,$f0,$f6	#return sum/(double)n	
+
+	jr $ra
+
+#######################################
+
+xtoy:
+	addiu $sp,$sp,-20
+	sw $ra,0($sp)  #obrigatorio guardar quando rotina chama outra
+	s.s $f20,4($sp) # guardar x porque se chama outra subrotina
+	sw $s0,8($sp) #guardar y porque se chama outra subrotina
+	sw $s1,12($sp) #guardar i porque é chamada uma subrotina entre os incrementos
+	s.s $f22,16($sp) #guardar return porque os seus valores sao alterados durante o chamamento de outra subrotina
+
+	mov.s $f20,$f12		#colocar $f12(float x) para um registo que nao pode ser alterado
+	move $s0,$a0		#colocar $a0 (int y) para um registo que nao pode ser alterado
+
+	li $s1,0		#i=0 registos salvaguardos 
+	l.s $f22,k		#result=1.0	
+	
+forx:
+	move $a0,$s0		#temos de supor que em cada iteração $a0 é alterado
+	jal abso		#chamar abs 
+
+	bge $s1,$v0,endforx	#i<abs(y)
+
+ifx:
+	ble $s0,0,elsex		#y>0
+
+	mul.s $f22,$f22,$f20	#result*=x	
+
+	j endifx
+elsex:
+	div.s $f22,$f22,$f20	#result/=x
+endifx:
+
+	addiu $s1,$s1,1		#i++
+
+	j forx
+endforx:
+
+	mov.s $f0,$f22		#move return para parametro de passagem de sub rotinas
+
+	lw $ra,0($sp)
+	l.s $f20,4($sp)
+	lw $s0,8($sp)
+	lw $s1,12($sp)
+	l.s $f22,16($sp)	
+	addiu $sp,$sp,20
+
+	jr $ra
+
+######################################################
+
+abso:
+	
+ifo:
+	bge $a0,0,endifo	#val<0
+
+	sub $a0,$0,$a0		#val=-val
+endifo:	
+	move $v0,$a0		#return val
+
+	jr $ra
+	
+########################################################
+
+sqrt:
+	l.d $f0,k	#xn=1.0
+	li $t0,0	#i=0
+
+	mtc1 $0,$f6	#$f6=0.0
+ift:
+	c.le.d $f12,$f6
+	bc1t elset	#val >0.0
+
+dot:
+	mov.d $f2,$f0	#aux=xn
+
+	div.d $f4,$f12,$f0	#$f4=val/xn
+	add.d $f4,$f0,$f4	#xn+val/xn
+	l.d $f8,k1		#$f8=0.5
+	mul.d $f0,$f4,$f8	#xn=0.5*(xn+val/xn)
+
+	addiu $t0,$t0,1	#i++
+whilet:
+	c.eq.d $f2,$f0
+	bc1t endift		#aux!=xn
+	blt $t0,25,dot		#+ii<25
+
+	j endift
+elset:	
+	mov.d $f0,$f6		#xn=0.0
+
+endift:
+			#xn ja ta no registo de retorno
+	jr $ra

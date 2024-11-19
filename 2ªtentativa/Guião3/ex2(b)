@@ -1,0 +1,57 @@
+# Mapa de registos:
+# value -> $t1
+# bit -> $t2
+# i -> $t3
+
+		.data
+str1: 	.asciiz "Introduza um número: "
+str2: 	.asciiz "\nO valor em binário é: "
+		.eqv print_string, 4
+		.eqv read_int, 5
+		.eqv print_char, 11
+		.text
+		.globl main
+main:
+
+		la $a0,str1
+		ori $v0,$0,print_string	
+		syscall					# print_string(str1)
+		
+		ori $v0,$0,read_int
+		syscall
+		move $t1,$v0				# value = read_int ($t1)
+		
+		la $a0,str2
+		ori $v0,$0,print_string	
+		syscall					# print_string(str2)
+		
+		li $t3,0					# i = 0
+for:			
+		bge  $t3,32,endfor			# i < 32
+		
+		rem $t4,$t3,4				# (i % 4)
+if1:
+		bne $t4,0,else1				# (i % 4) == 0)
+		li $v0,11
+ 		li $a0,' '	
+		syscall 					# print_char(' ')
+else1:		
+		andi $t2,$t1, 0x80000000		# bit = value & 0x80000000; // isola bit 31
+if2:
+		beq $t2,0,else2				# if(bit != 0)
+		
+		li $v0,11
+ 		li $a0,'1'	
+		syscall 					# print_char('1')	
+		j endif2 
+else2:
+		li $v0,11
+ 		li $a0,'0'	
+		syscall 					# print_char('0')
+endif2:		
+		sll $t1,$t1,1				# value = value << 1
+
+		addi $t3,$t3,1				# i++
+		j for
+endfor:			
+		jr $ra	

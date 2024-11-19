@@ -1,0 +1,39 @@
+# Mapa de registos:
+# i -> $t1
+# num -> $t2
+
+		.data
+		.eqv SIZE, 20
+ 		.eqv read_string, 8
+ 		.eqv print_int10, 1
+ str:		.space SIZE				# reservar espaço para a string
+ 		.text
+ 		.globl main
+ main:
+ 		la $a0,str
+ 		li $a1, SIZE
+		li $v0,read_string	
+		syscall					# read_string
+		
+		li $t2,0					# num = 0
+		li $t1,0					# i = 0
+while:
+		la $t3,str					# $t3 =  &str[0]
+		add $t4,$t3,$t1				# $t4 = &str[0] + i = &str[i]
+		lb $t5,0($t4)				# $t5 = str[i]
+		
+		beq $t5,'\0',endwhile			# str[i] != '\0'
+if:
+		blt $t5,'0',endif 				# str[i] >= '0'	  &&
+		bgt $t5,'9',endif				# &&   str[i] <= '9'
+		
+		addi $t2,$t2,1				# num++
+endif:
+		addi $t1,$t1,1				# i++
+		j while
+endwhile:		
+		move $a0,$t2 	
+ 		li $v0,print_int10 
+		syscall					# print_int10(num);
+		
+ 		jr $ra

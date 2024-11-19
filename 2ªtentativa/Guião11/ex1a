@@ -1,0 +1,72 @@
+#ALGUMAS NOTAS SOBRE STRUCT
+#DIMENSÕES:	char ->1
+#		int ->4
+#		double ->8
+#		float ->4
+
+#se o total das dimensoes acabar num numero n *4 
+#aproximar ao valor multiplo de 4 mais proximo
+
+# Tabela:
+#			  Alinhamento	|  Dimensão  | Offset			
+# unsigned int id_number |	4	|	4    |	0		
+# char first_name[18]	 |	1	| 1*18=18    |  4
+# char last_name[15]	 |	1	| 1*15=15    |  4+18=22
+# float grade		 |	4	|	4    |  22+15=37 -> multiplo de 4 = 40
+		#TOTAL   |      4(maior)|  40+4=44 
+		
+	.data
+	.eqv print_string, 4
+	.eqv print_intu10, 36
+	.eqv print_char, 11
+	.eqv print_float, 2
+str1:	.asciiz "\nN. Mec: "
+str2:	.asciiz "\nNome: "
+str3:	.asciiz "\nNota: " 
+	
+	.align 2
+stg:	.word 110045 		# dados para a estrutura  (word ja vem alinhada)
+	.asciiz "Miguel"	# falta 9 para preencher first_name
+	.space 11		# preencher first_name
+	.asciiz "Liamu"		# //
+	.space 9		# //
+	.float 5.1
+	
+	.text
+	.globl main
+main:
+	la $a0,str1
+	li $v0,print_string
+	syscall			# print_string(str1) 
+	
+	la $t0,stg		# $t0 = stg[0]
+	
+	lw $a0,0($t0)		# queremos o id number logo o offset é o 0 (stg.id_number)
+	li $v0,print_intu10
+	syscall			# print_intu10(stg.id_number)
+	
+	la $a0,str2
+	li $v0,print_string
+	syscall			# print_string(str2)
+	
+	addiu $a0,$t0,22	# ir buscar o endereço do last_name +22 por causa do offset
+	li $v0,print_string
+	syscall			# print_string(std.last_name)
+	
+	li $a0,';'
+	li $v0,print_char
+	syscall			# print_char(;)
+	
+	addiu $a0,$t0,4		# ir buscar o endereço do first_name +4 por causa do offset
+	li $v0,print_string
+	syscall
+	
+	la $a0,str3
+	li $v0,print_string
+	syscall			# print_string(str3)
+	
+	l.s $f12,40($t0)	# queremos ir buscar o valor que esta no endereço $t0+40
+	li $v0,print_float
+	syscall			# print_float(std.grade)
+	
+	jr $ra

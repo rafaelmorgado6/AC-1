@@ -1,0 +1,24 @@
+#Tabela:
+#			  Alinhamento	|  Dimensão  | Offset			
+#char a1[14]		|	1	| 1*14=14    |	0		
+#int i			|	4	| 	4    |  0+14=14 -> 16
+#char a2[17]		|	1	| 1*17=17    |  20
+#double g		|	8	|	8    |  20+17=37 -> 40
+		#TOTAL  |     8(maior)  |  40+8=48
+
+	.data
+	.align 2
+s1:	.asciiz "Str_1"		#inicio da struct
+	.word 2021
+	.asciiz "Str_2"
+	.double 2.718281828459045
+	
+	.text   
+
+f1:
+	la $t0,s1		#$t0=&s1[0]
+
+	l.d $f0,40($t0)	#s1.g
+
+	jr $ra
+

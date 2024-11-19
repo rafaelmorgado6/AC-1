@@ -1,0 +1,103 @@
+# Mapa de registos
+# p: $t0
+# *p : $t1
+# lista+Size: $t2
+# SIZE-1 : $t3
+# houve_troca: $t4
+# i: $t5
+# lista = &lista[0] : $t6
+# lista + i = &lista[i] : $t7
+# lista[i] : $t8
+# lista[i + 1] : $t9
+
+ 		
+ 		.data
+ 		.eqv FALSE,0
+ 		.eqv TRUE,1
+ 		.eqv SIZE,10
+str1:		.asciiz "\nIntroduza um numero: "
+str2: 	.asciiz "; "
+str3: 	.asciiz "\nConteudo do array por ordem:\n"		
+		.align 2
+lista:		.space 40
+		.eqv read_int,5
+ 		.eqv print_string, 4
+ 		.eqv print_int10,1
+ 		.text
+		.globl main
+main:
+		li $t5,0					# i = 0
+		
+		la $t0,lista 				# $t0 = p = lista
+		li $t2,SIZE 				# $t2 = SIZE
+		sll $t2,$t2,2 				# $t2 = SIZE * 4
+		addu $t2,$t0,$t2			# $t2 = lista + SIZE
+while1:
+		bge $t0,$t2,endwhile1		# p < SIZE + lista
+		
+		la $a0,str1
+		ori $v0,$0,print_string	
+		syscall					# print_string("\nIntroduza um numero: ")
+		
+		ori $v0,$0,read_int
+		syscall					# value = read_int ()
+		
+		sw $v0,0($t0)				# value = $t0
+	
+		addiu $t0,$t0,4	 			# p++
+	
+		j while1
+endwhile1:
+
+do:
+		la $t6,lista					# $t1 =  &lista[0]
+		li $t4,FALSE 				# houve_troca = FALSE;
+		li $t5,0					# i = 0
+		li $t3,SIZE					# $t3  = SIZE
+		sub $t3,$t3,1				# $t3  = SIZE - 1
+for:
+		bge $t5,$t3,while3			#  i < SIZE-1
+
+if:
+		sll $t7,$t5,2				# $t7 = i * 4
+		addu $t7,$t7,$t6			# lista[0] + i +1
+		
+		lw $t8,0($t7)				# $t8 = lista[i]
+		lw $t9,4($t7)				# $t9 = lista[i+1]
+		
+		ble $t8,$t9,endif			# lista[i] > lista[i+1]
+		
+		sw $t8,4($t7) 				# lista[i+1] = $t8
+		sw $t9,0($t7) 				# lista[i] = $t9
+		li $t4,TRUE 				# houveTroca = TRUE
+		
+endif:		
+		addi $t5,$t5,1				# i++
+		j for
+while3:
+		beq $t4,TRUE,do			# houveTroca==TRUE
+		
+		la $a0,str3
+		ori $v0,$0,print_string	
+		syscall					# print_string("\nConteudo do array por ordem:\n")
+		
+		li $t5,0					# i = 0
+while2:
+		bge $t5,SIZE,endwhile2		# i < SIZE
+		
+		sll $t7,$t5,2				# $t7 = i * 4
+		addu $t7,$t7,$t6			# $t7 = &lista[i] = lista + i
+		
+		lw $t8,0($t7) 				# $a0 = lista[i]
+		or $a0,$0,$t8
+		li $v0,print_int10
+		syscall					# print_int10( *p )
+		
+		la $a0,str2
+		ori $v0,$0,print_string	
+		syscall					# print_string("; ")
+		
+		addi $t5,$t5,1				# i++
+		j while2
+endwhile2:
+		jr $ra

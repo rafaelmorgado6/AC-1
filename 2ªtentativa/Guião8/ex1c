@@ -1,0 +1,40 @@
+	.data
+str:	.asciiz "101101"		# 45
+	.eqv print_int10, 1
+	.text
+	.globl main
+main:
+	addiu $sp,$sp,-4
+	sw $ra,0($sp)		# Salvaguardar o $ra
+	
+	la $a0,str		# a0 = str
+	jal atoi
+	
+	or $a0,$0,$v0
+	li $v0,print_int10
+	syscall		
+	
+	lw $ra,0($sp)		# repõe o $ra
+	addiu $sp,$sp,4
+	
+	jr $ra
+	
+##########################################################################
+
+atoi:	
+	li $v0,0		# res = 0
+	
+while:	
+	lb $t0,0($a0)		
+	blt $t0,'0',endwhile	# *s >= '0' 
+	bgt $t0,'1',endwhile	# *s <= '1'
+	
+	addi $a0,$a0,1		# *s++
+	sub $t1,$t0,'0'		# digit = *s++ - '0'
+	
+	mul $v0,$v0,2		# res = 10 * res
+	add $v0,$v0,$t1		# res = 10 * res + digit
+	j while
+	
+endwhile:
+	jr $ra

@@ -1,0 +1,72 @@
+# Mapa de registos
+# i: $t0
+# v: $t1
+# &(val[0]): $t2
+# SIZE/2 : $t5
+# SIZE/2*4 : $s1
+# *val[i+SIZE/2] : $t7
+# val[i] : $t8
+# val[i++] : $t9
+# val[i+SIZE/2] : $s0
+
+	.data
+str1:	.asciiz "Result is: "
+val:	.word 8,4,15,-1987,327,-9,27,16 
+ 	.eqv print_int10,1
+ 	.eqv print_string,4
+ 	.eqv print_char,11
+ 	.eqv SIZE,8 
+ 	.text
+ 	.globl main
+ 	
+main:
+	li $t0,0		# i = 0
+	li $t3,SIZE		# $t3 = SIZE
+	la $t2, val		# $t2 = val[0]
+	
+	srl $t5,$t3,1		# $t5 = SIZE/2
+	sll $s1,$t5,2		# $s1 = SIZE/2 * 4
+
+do1:
+	sll $t4,$t0,2		# $t4 = i * 4
+	addu $t8,$t4,$t2	# $t8 = val[0] + i = val[i]
+	lw $t1,0($t8)		# v = val[i]
+	
+	addu $t7,$s1,$t8	# $t7 = SIZE/2 + val[i] = *val[i + SIZE/2]
+	
+	lw $s0,0($t7)		# $s0 = val[i + SIZE/2]
+	sw $s0,0($t8)		# val[i] = val[i + SIZE/2]
+	sw $t1,0($t7)		# val[i + SIZE/2] = v
+	
+	addi $t0,$t0,1		# i++
+	
+while1:
+	blt $t0,$t5,do1		# ++i < SIZE/2
+	
+	la $a0,str1
+	li $v0,print_string
+	syscall			# print_string
+	
+	li $t0,0		# i = 0
+do2:
+	sll $t4,$t0,2		# i * 4
+	addu $t9,$t4,$t2	# $t9 = i + val[0] = val[i++]
+	
+	addi $t0,$t0,1		# i++
+	
+	lw $a0,0($t9)
+	li $v0,print_int10
+	syscall			# print( val[i++] ) 
+	
+	li $a0,','
+	li $v0,11
+	syscall			# print_char( , )
+	
+while2:
+	blt $t0,$t3,do2		# i < SIZE
+
+	jr $ra
+	
+	
+	
+	

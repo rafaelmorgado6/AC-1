@@ -1,0 +1,23 @@
+	.data
+Array:	.space,40
+	.eqv SIZE,10
+	.text
+	.globl main
+main:	
+	li $t0,0	# i = 0
+for: 	bge $t0,SIZE,endf
+	la $t2,Array	# $t2 = Array[0]
+	sll $t1,$t0,2
+	addu $t1,$t2,$t1
+	sw $0,0($t1)
+	
+	li $v0,1
+	or $a0,$0,$0
+	syscall	
+	
+	addi $t0,$t0,1
+	j for
+endf:
+	jr $ra 	
+	
+		

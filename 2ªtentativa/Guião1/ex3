@@ -1,0 +1,50 @@
+		.data
+str1: 	.asciiz " Valor de x: "
+str2: 	.asciiz "\n Valor de y(decimal): "
+str3: 	.asciiz "\n Valor de y(hexadecimal): "
+str4: 	.asciiz "\n Valor de y(unsigned): "
+str5: 	.asciiz "\n"
+		.text
+		.globl main
+main: 		
+		la $a0,str1	
+		ori $v0,$0,4
+		syscall			# print_string(str1)
+	
+		ori $v0,$0,5 		# $v0 = 5 (read_int)
+		syscall
+		move $t0,$v0		# $t0 = read_int
+	
+		ori $t2,$0,8		# $t2 = 8
+		add $t1,$t0,$t0		# $t1 = 2 * $t0
+		sub $t1,$t1,$t2		# $t1 = 2*$t1 - 8
+		
+		la $a0,str2
+		ori $v0,$0,4
+		syscall			# print_string(str2)
+	
+		move $a0,$t1		# $a0 = $t1
+		ori $v0,$0,1		# $v0 = 1 (print_int10)
+		syscall
+	
+		la $a0,str3
+		ori $v0,$0,4
+		syscall			# print_string(str3)
+	
+		move $a0,$t1		# $a0 = $t1
+		ori $v0,$0,34		# $v0 = 34 (print_int16)
+		syscall
+	
+		la $a0,str4
+		ori $v0,$0,4
+		syscall			# print_string(str4)
+	
+		move $a0,$t1		# $a0 = $t1
+		ori $v0,$0,36		# $v0 = 36 (print_intu10)
+		syscall
+	
+		la $a0,str5
+		ori $v0,$0,4
+		syscall			# print_string(str5)
+	
+		jr $ra

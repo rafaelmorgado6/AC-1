@@ -1,0 +1,73 @@
+#ALGUMAS NOTAS SOBRE STRUCT
+#DIMENSÕES:	char ->1
+#		int ->4
+#		double ->8
+#		float ->4
+
+#se o total das dimensoes acabar num numero n *4 
+#aproximar ao valor multiplo de 4 mais proximo
+
+# Tabela:
+#			  Alinhamento	|  Dimensão  | Offset			
+# unsigned int id_number |	4	|	4    |	0		
+# char first_name[18]	 |	1	| 1*18=18    |  4
+# char last_name[15]	 |	1	| 1*15=15    |  4+18=22
+# float grade		 |	4	|	4    |  22+15=37 -> multiplo de 4 = 40
+		#TOTAL   |      4(maior)|  40+4=44 
+		
+	.data
+	.eqv print_string, 4
+	.eqv print_intu10, 36
+	.eqv print_char, 11
+	.eqv print_float, 2
+	.eqv read_string, 8
+	.eqv read_float,6
+	.eqv read_int, 5 
+str1:	.asciiz "\nN. Mec: "
+str2:	.asciiz "\nPrimeiro nome: "
+str3:	.asciiz "\nÚltimo nome: "
+str4:	.asciiz "\nNota: " 
+	
+	.align 2
+stg:	.space 44		# guardar o espaço para a estrutura toda total da dimensao
+	
+	.text
+	.globl main
+main:
+	la $a0,str1
+	li $v0,print_string
+	syscall			# print_string(str1) 
+	
+	la $t0,stg		# $t0 = stg[0]
+	
+	li $v0,read_int
+	syscall			# read_int()
+	sw $v0,0($t0)		# stg.id_number = read_int	
+	
+	la $a0,str2
+	li $v0,print_string
+	syscall			# print_string(str2)
+	
+	addiu $a0,$t0,4		# colocar em $a0 o endereço onde vai ser coloca a string, é 4 porque o int anterior ocupa 4 espaços
+	li $a1,17		# segundo parametro de entrada(17 é o numero de caracteres)
+	li $v0,read_string
+	syscall			# read_string(stg.first_name,17)
+	
+	la $a0,str3
+	li $v0,print_string
+	syscall			# print_string(str3)
+	
+	addiu $a0,$t0,22
+	li $a1,14		# segundo parametro de entrada(14 é o numero de caracteres sem o \0)
+	li $v0,read_string
+	syscall
+	
+	la $a0,str4
+	li $v0,print_string
+	syscall			# print_string(str4)
+	
+	li $v0,read_float	
+	syscall			# read_float
+	s.s $f0,40($t0)		# read_float = (stg.grade)
+	
+	jr $ra

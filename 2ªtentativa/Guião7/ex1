@@ -1,0 +1,45 @@
+# O argumento da função é passado em $a0
+# O resultado é devolvido em $v0
+# Sub-rotina terminal: não devem ser usados registos $sx 
+
+# Mapa de registos:
+# $t0 - caracteres
+# $t1 - len
+	
+		.data
+str: 		.asciiz "Arquitetura de Computadores I"
+		.eqv print_int10, 1
+		.text
+		.globl main
+main:
+		addiu $sp,$sp,-4  		# Reserva espaço na stack 
+		sw $ra,0($sp)  			# Copia registos
+		
+		la $a0,str
+		jal strlen
+		
+		move $a0,$v0
+		li $v0,print_int10
+		syscall
+		
+		lw $ra,0($sp)  			# Repõe o valor
+		addiu $sp,$sp,4  		# Liberta espaço na stack
+		
+		jr $ra
+
+#####################################################
+strlen:
+		li $t1,0				# len = 0 
+while:		
+		lb $t0,0($a0)			# $t0 = *s
+		addiu $a0,$a0,1			# *s++
+		
+		beq $t0,'\0',endwhile		# *s++ != '\0'
+		
+		addi $t1,$t1,1			# len++	
+		
+		j while
+endwhile:
+		move $v0,$t1     		# $v0 = len
+		
+		jr $ra

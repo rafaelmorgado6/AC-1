@@ -1,0 +1,40 @@
+	.data
+	.eqv print_float,2
+	.eqv print_string,4
+	.eqv read_int,5
+	.eqv read_float,6
+str: 	.asciiz "Introduza 1 número real e de seguida 1 expoente inteiro:"	
+	.text
+	.globl main		
+			
+main: 	addiu $sp,$sp,-4
+      	sw $ra,0($sp)
+      
+      	la $a0,str
+      	li $v0,print_string
+      	syscall			# print_string(str)
+      	
+      	li $v0,read_float
+      	syscall
+      	
+      	mov.s $f12,$f0 		#$f12=x
+      	li $v0,read_int
+      	syscall
+      	
+      	move $a0,$v0 		#$a0=y
+	jal xtoy
+      
+      	mov.s $f12,$f0
+      	li $v0,print_float 
+      	syscall 		#print(result)
+      
+      	lw $ra,0($sp)
+      	addiu $sp,$sp,4
+      	jr $ra	
+
+xtoy: 	li $t1,0
+	li $t2,1
+
+abs: 	
+if:	bgez $a0,endif
+	

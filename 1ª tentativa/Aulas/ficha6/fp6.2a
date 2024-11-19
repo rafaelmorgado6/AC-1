@@ -1,0 +1,33 @@
+# p: $t1
+#
+ 	.eqv SIZE,3
+ 	.eqv print_string,4
+ 	.data
+array:	.word str1,str2,str3
+str1: 	.asciiz "Array"
+str2: 	.asciiz "de"
+str3: 	.asciiz "ponteiros"
+ 	.text
+ 	.globl main
+main:
+	la $t1, array 		# $t1 = &array[0]
+ 	li $t2, SIZE
+	sll $t2,$t2,2 		# $t2 = SIZE * 4
+ 	addu $t2,$t1,$t2 	# $t2(pUltimo) = lista + SIZE
+	
+for:	bge $t1,$t2,endf	# while(p < pUltimo)
+	
+ 	lw $a0,0($t1) 		# $a0 = array[i]
+ 	
+ 	li $v0,print_string
+	syscall			# print_string
+	
+	li $a0,'\n'
+	li $v0,11
+	syscall
+	
+	addi $t1,$t1,4		# *p++
+	
+ 	j for
+endf: 	
+ 	jr $ra
